@@ -1,0 +1,25 @@
+{
+  "name": "tech-salary",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@iconify-json/bx": "^1.1.6",
+    "@types/node": "^18",
+    "@unocss/nuxt": "^0.51.12",
+    "@unocss/reset": "^0.51.12",
+    "nuxt": "^3.4.3",
+    "unocss": "^0.51.12"
+  },
+  "dependencies": {
+    "@anu-vue/nuxt": "^0.13.1",
+    "@anu-vue/preset-theme-default": "^0.13.1",
+    "anu-vue": "^0.13.1",
+    "csvtojson": "^2.0.10"
+  }
+}
