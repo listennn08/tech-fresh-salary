@@ -94,10 +94,10 @@ const reset = () => {
       <a class="text-base text-primary underline" href="https://www.dcard.tw/f/tech_job/p/241943049" target="_blank">Dcard</a>
     </h1>
     <div mb="2" flex gap="5" items="center">
-      <div w="1/6" relative mr="2">
+      <div w="lg:1/6" relative mr="2">
         <ASelect v-model="filterIndustry" :options="industry" placeholder="產業類別" />
       </div>
-      <div w="1/6" relative>
+      <div w="lg:1/6" relative>
         <ASelect v-model="filterSalary" :options="salaryOptions" placeholder="薪資範圍" />
       </div>
       <ABtn @click="reset">重置</ABtn>
