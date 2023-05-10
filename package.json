@@ -14,6 +14,7 @@
     "@unocss/nuxt": "^0.51.12",
     "@unocss/reset": "^0.51.12",
     "nuxt": "^3.4.3",
+    "nuxt-gtag": "^0.5.7",
     "unocss": "^0.51.12"
   },
   "dependencies": {

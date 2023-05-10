@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   modules: [
     '@anu-vue/nuxt',
     '@unocss/nuxt',
+    'nuxt-gtag',
   ],
   app: {
     head: {
@@ -15,5 +16,8 @@ export default defineNuxtConfig({
         { name: 'author', content: 'Matt Tai (listennn08@outlook.com)' }
       ],
     },
-  }
+  },
+  gtag: {
+    id: 'G-K9X33E361V',
+  },
 })
