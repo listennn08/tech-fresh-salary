@@ -15,6 +15,9 @@ export default defineNuxtConfig({
         { name: 'keywords', content: '科技,科技業,新鮮人,起薪,分享' },
         { name: 'author', content: 'Matt Tai (listennn08@outlook.com)' }
       ],
+      htmlAttrs: {
+        lang: 'zh-Hant-TW',
+      },
     },
   },
   gtag: {
