@@ -18,10 +18,12 @@ interface SalaryData {
 const { data } = await useFetch('https://docs.google.com/spreadsheets/d/1hjvg6Rcy2aI90jT11yuI3MYD6DVow0CuJLuqtz4-IeU/export?format=csv')
 const company = reactive<string[]>([])
 const industry = reactive<string[]>([])
-const filterIndustry = ref('')
-const filterSalary = ref('')
-const filterCompany = ref('')
-const filterYear = ref('')
+const filter = reactive<Record<string, string>>({
+  industry: '',
+  salary: '',
+  company: '',
+  year: '',
+})
 const salaryOptions = reactive([
   '30 以下',
   '31 ~ 40',
@@ -68,10 +70,10 @@ try {
 
 const displayData = computed(() => {
   return tableData
-    .filter((el) => !filterIndustry.value || el.產業類別 === filterIndustry.value)
+    .filter((el) => !filter.industry || el.產業類別 === filter.industry)
     .filter((el) => {
       const salary = Number(el['月薪(K)'].match(/([0-9]+)/)?.[0] || '')
-      switch (filterSalary.value) {
+      switch (filter.salary) {
         case '30 以下':
           return salary < 30
         case '31 ~ 40':
@@ -92,13 +94,23 @@ const displayData = computed(() => {
           return true
       }
     })
-    .filter((el) => !filterCompany.value || el.公司 === filterCompany.value)
-    .filter((el) => !filterYear.value || el.面試年份 === filterYear.value)
+    .filter((el) => !filter.company || el.公司 === filter.company)
+    .filter((el) => !filter.year || el.面試年份 === filter.year)
 })
 const reset = () => {
-  filterSalary.value = ''
-  filterIndustry.value = ''
+  useTrackEvent('reset')
+  Object.keys(filter).forEach((key) => filter[key] = '')
 }
+
+watch(filter, (newValue, oldValue) => {
+  Object.keys(newValue).forEach((key) => {
+    if (newValue[key] !== oldValue[key]) {
+      useTrackEvent(key, {
+        option: newValue[key],
+      })
+    }
+  })
+})
 </script>
 <template>
   <main p="4" mb="8">
@@ -108,16 +120,16 @@ const reset = () => {
     </h1>
     <div mb="2" flex="~ wrap" gap="5" items="center">
       <div w="[calc(50%-1.25rem)] lg:1/6" relative>
-        <ASelect v-model="filterIndustry" :options="industry" placeholder="產業類別" />
+        <ASelect v-model="filter.industry" :options="industry" placeholder="產業類別" />
       </div>
       <div w="[calc(50%-1.25rem)] lg:1/6" relative>
-        <ASelect v-model="filterSalary" :options="salaryOptions" placeholder="薪資範圍" />
+        <ASelect v-model="filter.salary" :options="salaryOptions" placeholder="薪資範圍" />
       </div>
       <div w="[calc(50%-1.25rem)] lg:1/6" relative>
-        <ASelect v-model="filterCompany" :options="company" placeholder="公司" />
+        <ASelect v-model="filter.company" :options="company" placeholder="公司" />
       </div>
       <div w="[calc(50%-1.25rem)] lg:1/6" relative>
-        <ASelect v-model="filterYear" :options="yearOptions" placeholder="面試年份" />
+        <ASelect v-model="filter.year" :options="yearOptions" placeholder="面試年份" />
       </div>
 
       <ABtn @click="reset">重置</ABtn>
