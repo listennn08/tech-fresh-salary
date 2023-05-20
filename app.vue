@@ -105,7 +105,8 @@ const reset = () => {
 watch(filter, (newValue, oldValue) => {
   Object.keys(newValue).forEach((key) => {
     if (newValue[key] !== oldValue[key]) {
-      useTrackEvent(key, {
+      useTrackEvent('filter', {
+        type: key,
         option: newValue[key],
       })
     }
