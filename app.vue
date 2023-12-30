@@ -4,7 +4,7 @@ import csv from 'csvtojson'
 interface SalaryData {
   [k: string]: string | undefined
   時間戳記?: string
-  公司: string
+  公司名稱: string
   面試年份: string
   職務: string
   '月薪(K)': string
@@ -43,9 +43,9 @@ const tableData = reactive<SalaryData[]>([])
 try {
   const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
   jsonObj.forEach((el) => {
-    if (el.公司 === '' || !/\d/.test(el['月薪(K)'])) return
-    if (company.indexOf(el.公司) === -1 && !el.公司.includes('(0)')) {
-      company.push(el.公司)
+    if (el.公司名稱 === '' || !/\d/.test(el['月薪(K)'])) return
+    if (company.indexOf(el.公司名稱) === -1 && !el.公司名稱.includes('(0)')) {
+      company.push(el.公司名稱)
     }
     if (industry.indexOf(el.產業類別) === -1 && el.產業類別) {
       industry.push(el.產業類別)
@@ -94,7 +94,7 @@ const displayData = computed(() => {
           return true
       }
     })
-    .filter((el) => !filter.company || el.公司 === filter.company)
+    .filter((el) => !filter.company || el.公司名稱 === filter.company)
     .filter((el) => !filter.year || el.面試年份 === filter.year)
 })
 const reset = () => {
