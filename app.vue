@@ -35,10 +35,6 @@ const salaryOptions = reactive([
   '140 以上',
 ])
 const yearOptions = reactive<string[]>([])
-const sortBy = reactive({
-  name: '',
-  by: '',
-})
 const tableData = reactive<SalaryData[]>([])
 try {
   const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
@@ -101,13 +97,12 @@ const reset = () => {
   useTrackEvent('reset')
   Object.keys(filter).forEach((key) => filter[key] = '')
 }
-
-watch(filter, (newValue, oldValue) => {
-  Object.keys(newValue).forEach((key) => {
-    if (newValue[key] !== oldValue[key]) {
+Object.keys(filter).forEach((key) => {
+  watch(() => filter[key], (newValue, oldValue) => {
+    if (newValue !== oldValue) {
       useTrackEvent('filter', {
         type: key,
-        option: newValue[key],
+        option: newValue,
       })
     }
   })
