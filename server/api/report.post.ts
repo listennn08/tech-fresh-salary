@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 ${body.errors.join('\n')}
 \`\`\`
 
-[url](event.node.req.headers.origin)})
+[url](${event.node.req.headers.origin})
 `,
   })
 
