@@ -45,7 +45,7 @@ try {
   const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
   jsonObj.forEach((el) => {
     if (el.公司名稱 === '' || !/\d/.test(el['月薪(K)'])) return
-    if (company.indexOf(el.公司名稱) === -1 && !el.公司.includes('(0)')) {
+    if (company.indexOf(el.公司名稱) === -1 && !el.公司名稱.includes('(0)')) {
       company.push(el.公司名稱)
     }
     if (industry.indexOf(el.產業類別) === -1 && el.產業類別) {
