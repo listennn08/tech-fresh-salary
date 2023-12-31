@@ -21,6 +21,7 @@
     "@anu-vue/nuxt": "^0.13.1",
     "@anu-vue/preset-theme-default": "^0.13.1",
     "anu-vue": "^0.13.1",
-    "csvtojson": "^2.0.10"
+    "csvtojson": "^2.0.10",
+    "octokit": "^3.1.2"
   }
 }

@@ -16,6 +16,11 @@ interface SalaryData {
 }
 
 const { data } = await useFetch('https://docs.google.com/spreadsheets/d/1hjvg6Rcy2aI90jT11yuI3MYD6DVow0CuJLuqtz4-IeU/export?format=csv')
+const errors = ref<string[]>([])
+const dialogVisible = ref(false)
+const dialogType = ref('primary')
+const dialogMsg = ref('')
+
 const company = reactive<string[]>([])
 const industry = reactive<string[]>([])
 const filter = reactive<Record<string, string>>({
@@ -40,7 +45,7 @@ try {
   const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
   jsonObj.forEach((el) => {
     if (el.公司名稱 === '' || !/\d/.test(el['月薪(K)'])) return
-    if (company.indexOf(el.公司名稱) === -1 && !el.公司名稱.includes('(0)')) {
+    if (company.indexOf(el.公司名稱) === -1 && !el.公司.includes('(0)')) {
       company.push(el.公司名稱)
     }
     if (industry.indexOf(el.產業類別) === -1 && el.產業類別) {
@@ -60,11 +65,13 @@ try {
     tableData.push(el)
   })
   yearOptions.sort((a, b) => Number(b) - Number(a))
-} catch (e) {
+} catch (e: any) {
+  errors.value.push(`load data error: ${e.message}`)
   console.log('oops', e)
 }
 
 const displayData = computed(() => {
+  try {
   return tableData
     .filter((el) => !filter.industry || el.產業類別 === filter.industry)
     .filter((el) => {
@@ -92,10 +99,20 @@ const displayData = computed(() => {
     })
     .filter((el) => !filter.company || el.公司名稱 === filter.company)
     .filter((el) => !filter.year || el.面試年份 === filter.year)
+  } catch (e: any) {
+    errors.value.push(`display data error: ${e.message}`)
+    console.log('oops', e)
+    return []
+  }
 })
 const reset = () => {
-  useTrackEvent('reset')
-  Object.keys(filter).forEach((key) => filter[key] = '')
+  try {
+    useTrackEvent('reset')
+    Object.keys(filter).forEach((key) => filter[key] = '')
+  } catch (e: any) {
+  errors.value.push(`reset error: ${e.message}`)
+    console.log('oops', e)
+  }
 }
 Object.keys(filter).forEach((key) => {
   watch(() => filter[key], (newValue, oldValue) => {
@@ -107,6 +124,43 @@ Object.keys(filter).forEach((key) => {
     }
   })
 })
+
+async function sleep(time: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true)
+    }, time)
+  })
+}
+async function bugReport() {
+  try {
+  dialogVisible.value = true
+  dialogType.value = 'primary'
+  dialogMsg.value = '自我檢測錯誤中...'
+  await sleep(2000)
+
+  if (!errors.value.length) {
+    if (!confirm('沒有檢測到問題，確定要回報嗎？')) return
+  } else {
+    dialogType.value = 'danger'
+    dialogMsg.value = `檢測到 ${errors.value.length} 個錯誤`
+    await sleep(2000)
+  }
+
+  await $fetch('/api/report', {
+    method: 'POST',
+    body: {
+      errors: errors.value
+    }
+  })
+
+  dialogType.value = 'success'
+  dialogMsg.value = '回報成功！'
+  await sleep(2000)
+  } finally {
+    dialogVisible.value = false
+  }
+}
 </script>
 <template>
   <main p="4" mb="8">
@@ -139,10 +193,20 @@ Object.keys(filter).forEach((key) => {
       </template>
     </ADataTable>
   </main>
-  <footer pos="fixed bottom-0 inset-x-0" text="center" bg="white" p="y-2">
-    <span>資料來源：</span>
-    <a class="text-primary underline" href="https://docs.google.com/spreadsheets/d/1hjvg6Rcy2aI90jT11yuI3MYD6DVow0CuJLuqtz4-IeU/edit" target="_blank">畢業薪資分享 (回覆)</a>
+  <footer pos="fixed bottom-0 inset-x-0" flex items="center" justify="center" text="center" bg="white" p="y-2">
+    <div ml="auto">
+      <span>資料來源：</span>
+      <a class="text-primary underline" href="https://docs.google.com/spreadsheets/d/1hjvg6Rcy2aI90jT11yuI3MYD6DVow0CuJLuqtz4-IeU/edit" target="_blank">畢業薪資分享 (回覆)</a>
+    </div>
+    <ABtn color="danger" icon-only icon="i-bx-error-circle" variant="text" ml="auto" @click="bugReport">
+      <ATooltip text="Bug report" />
+    </ABtn>
   </footer>
+  <div pos="fixed" right="2" top="2">
+    <AAlert v-show="dialogVisible" :color="dialogType">
+      {{  dialogMsg }}
+    </AAlert>
+  </div>
 </template>
 <style lang="postcss">
 .a-list.grid.a-select-options-list {
