@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import csv from 'csvtojson'
+// import csv from 'csvtojson'
+import { CSVToArray } from './utils'
 
 interface SalaryData {
   [k: string]: string | undefined
@@ -16,6 +17,8 @@ interface SalaryData {
 }
 
 const { data } = await useFetch('https://docs.google.com/spreadsheets/d/1hjvg6Rcy2aI90jT11yuI3MYD6DVow0CuJLuqtz4-IeU/export?format=csv')
+
+const rowData = ref<any>(CSVToArray(data.value as string, ','))
 const errors = ref<string[]>([])
 const dialogVisible = ref(false)
 const dialogType = ref('primary')
@@ -43,42 +46,42 @@ const yearOptions = reactive<string[]>([])
 const tableData = reactive<SalaryData[]>([])
 try {
   const header = ['時間戳記', '公司名稱', '面試年份', '職務', '月薪(K)', '一年保多少(月)', '學歷(可分享可不分)', '面試分享or 推薦事項', '產業類別']
-  const dataArr = (data.value as string).split('\n')
-  for (let i = 1; i < dataArr.length; i++) {
-    const row = dataArr[i].split(',')
-    tableData.push(header.reduce((acc, cur, index) => {
-      acc[cur] = row[index]
-      if (cur === '月薪(K)') {
-        acc[cur] = acc[cur]?.replace(/[>]/g, '').replace(/x/i, Math.floor(Math.random() * 9).toString())
-        acc[cur] = (Number(acc[cur]) < 10 ? Number(acc[cur]) * 10 : acc[cur]).toString()
-      }
-      if (cur === '面試年份') {
-        acc[cur] = acc[cur]?.split('/')[0]
-        if (acc[cur]?.length === 3) acc[cur] = (Number(acc[cur]) + 1911).toString()
+  for (let i = 1; i < rowData.value.length; i++) {
+    const obj: Record<string, string> = {}
+    for (let j = 0; j < header.length; j++) {
+      const key = header[j]
+      const row = rowData.value[i]
+      obj[key] = row[j]
 
-        if (yearOptions.indexOf(acc[cur]) === -1) {
-          yearOptions.push(acc[cur])
+      if (key === '月薪(K)') {
+        obj[key] = obj[key]?.replace(/[>]/g, '').replace(/x/i, Math.floor(Math.random() * 9).toString())
+        obj[key] = (Number(obj[key]) < 10 ? Number(obj[key]) * 10 : obj[key]).toString()
+      }
+      if (key === '面試年份') {
+        obj[key] = obj[key]?.split('/')[0]
+        if (obj[key]?.length === 3) obj[key] = (Number(obj[key]) + 1911).toString()
+
+        if (yearOptions.indexOf(obj[key]) === -1) {
+          yearOptions.push(obj[key])
         }
       }
 
-      if (cur === '面試分享or 推薦事項') {
-        acc.recommend = acc[cur]
-        delete acc[cur]
+      if (key === '面試分享or 推薦事項') {
+        obj.recommend = obj[key]
+        delete obj[key]
       }
-
      
-      delete acc['面試分享or 推薦事項']
-      delete acc['時間戳記']
-      return acc
-    }, {} as SalaryData))
-    
-    if (row[1] && !row[1].includes('(0)') && company.indexOf(row[1]) === -1) {
-      company.push(row[1])
-    }
-    if (row[8] && industry.indexOf(row[8]) === -1) {
-      industry.push(row[8])
-    }
+      delete obj['面試分享or 推薦事項']
+      delete obj['時間戳記']
 
+      if (j === 1 && row[j] && !row[j].includes('(0)') && company.indexOf(row[j]) === -1) {
+        company.push(row[j])
+      }
+      if (j === 8 && row[j] && industry.indexOf(row[j]) === -1) {
+        industry.push(row[j])
+      }
+    }
+    tableData.push(obj as SalaryData)
   }
 
   // const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
