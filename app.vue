@@ -42,28 +42,66 @@ const salaryOptions = reactive([
 const yearOptions = reactive<string[]>([])
 const tableData = reactive<SalaryData[]>([])
 try {
-  const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
-  jsonObj.forEach((el) => {
-    if (el.公司名稱 === '' || !/\d/.test(el['月薪(K)'])) return
-    if (company.indexOf(el.公司名稱) === -1 && !el.公司名稱.includes('(0)')) {
-      company.push(el.公司名稱)
-    }
-    if (industry.indexOf(el.產業類別) === -1 && el.產業類別) {
-      industry.push(el.產業類別)
-    }
-    el['月薪(K)'] = el['月薪(K)'].replace(/[>]/g, '').replace(/x/i, Math.floor(Math.random() * 9).toString())
-    el['月薪(K)'] = (Number(el['月薪(K)']) < 10 ? Number(el['月薪(K)']) * 10 : el['月薪(K)']).toString()
-    el.面試年份 = el.面試年份.split('/')[0]
-    if (el.面試年份.length === 3) el.面試年份 = (Number(el.面試年份) + 1911).toString()
+  const header = ['時間戳記', '公司名稱', '面試年份', '職務', '月薪(K)', '一年保多少(月)', '學歷(可分享可不分)', '面試分享or 推薦事項', '產業類別']
+  const dataArr = (data.value as string).split('\n')
+  for (let i = 1; i < dataArr.length; i++) {
+    const row = dataArr[i].split(',')
+    tableData.push(header.reduce((acc, cur, index) => {
+      acc[cur] = row[index]
+      if (cur === '月薪(K)') {
+        acc[cur] = acc[cur]?.replace(/[>]/g, '').replace(/x/i, Math.floor(Math.random() * 9).toString())
+        acc[cur] = (Number(acc[cur]) < 10 ? Number(acc[cur]) * 10 : acc[cur]).toString()
+      }
+      if (cur === '面試年份') {
+        acc[cur] = acc[cur]?.split('/')[0]
+        if (acc[cur]?.length === 3) acc[cur] = (Number(acc[cur]) + 1911).toString()
 
-    if (yearOptions.indexOf(el.面試年份) === -1) {
-      yearOptions.push(el.面試年份)
+        if (yearOptions.indexOf(acc[cur]) === -1) {
+          yearOptions.push(acc[cur])
+        }
+      }
+
+      if (cur === '面試分享or 推薦事項') {
+        acc.recommend = acc[cur]
+        delete acc[cur]
+      }
+
+     
+      delete acc['面試分享or 推薦事項']
+      delete acc['時間戳記']
+      return acc
+    }, {} as SalaryData))
+    
+    if (row[1] && !row[1].includes('(0)') && company.indexOf(row[1]) === -1) {
+      company.push(row[1])
     }
-    el.recommend = el['面試分享or 推薦事項']
-    delete el['面試分享or 推薦事項']
-    delete el['時間戳記']
-    tableData.push(el)
-  })
+    if (row[8] && industry.indexOf(row[8]) === -1) {
+      industry.push(row[8])
+    }
+
+  }
+
+  // const jsonObj = (await csv().fromString(data.value as string)) as SalaryData[]
+  // jsonObj.forEach((el) => {
+  //   if (el.公司名稱 === '' || !/\d/.test(el['月薪(K)'])) return
+  //   if (company.indexOf(el.公司名稱) === -1 && !el.公司名稱.includes('(0)')) {
+  //     company.push(el.公司名稱)
+  //   }
+  //   if (industry.indexOf(el.產業類別) === -1 && el.產業類別) {
+  //     industry.push(el.產業類別)
+  //   }
+  //   el['月薪(K)'] = el['月薪(K)'].replace(/[>]/g, '').replace(/x/i, Math.floor(Math.random() * 9).toString())
+  //   el['月薪(K)'] = (Number(el['月薪(K)']) < 10 ? Number(el['月薪(K)']) * 10 : el['月薪(K)']).toString()
+  //   el.面試年份 = el.面試年份.split('/')[0]
+  //   if (el.面試年份.length === 3) el.面試年份 = (Number(el.面試年份) + 1911).toString()
+  //   if (yearOptions.indexOf(el.面試年份) === -1) {
+  //     yearOptions.push(el.面試年份)
+  //   } 
+  //   el.recommend = el['面試分享or 推薦事項']
+  //   delete el['面試分享or 推薦事項']
+  //   delete el['時間戳記']
+  //   tableData.push(el)
+  // })
   yearOptions.sort((a, b) => Number(b) - Number(a))
 } catch (e: any) {
   errors.value.push(`load data error: ${e.message}`)
