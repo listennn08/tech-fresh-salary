@@ -20,9 +20,11 @@ const { data } = await useFetch('https://docs.google.com/spreadsheets/d/1hjvg6Rc
 
 const rowData = ref<any>(CSVToArray(data.value as string, ','))
 const errors = ref<string[]>([])
-const dialogVisible = ref(false)
-const dialogType = ref('primary')
-const dialogMsg = ref('')
+const alertVisible = ref(false)
+const alertType = ref('primary')
+const alertMsg = ref('')
+const isDialogShown = ref(false)
+const reportDescription = ref('')
 
 const company = reactive<string[]>([])
 const industry = reactive<string[]>([])
@@ -173,34 +175,44 @@ async function sleep(time: number) {
     }, time)
   })
 }
-async function bugReport() {
-  try {
-  dialogVisible.value = true
-  dialogType.value = 'primary'
-  dialogMsg.value = '自我檢測錯誤中...'
+
+async function showAlert(msg: string, type: string) {
+  alertVisible.value = true
+  alertType.value = type
+  alertMsg.value = msg
   await sleep(2000)
-
-  if (!errors.value.length) {
-    if (!confirm('沒有檢測到問題，確定要回報嗎？')) return
-  } else {
-    dialogType.value = 'danger'
-    dialogMsg.value = `檢測到 ${errors.value.length} 個錯誤`
-    await sleep(2000)
-  }
-
+  alertVisible.value = false
+}
+async function bugReport(msg: string) {
   await $fetch('/api/report', {
     method: 'POST',
     body: {
-      errors: errors.value
+      errors: msg
     }
   })
 
-  dialogType.value = 'success'
-  dialogMsg.value = '回報成功！'
-  await sleep(2000)
+  await showAlert('回報成功！', 'success')
+}
+async function bugCheck() {
+  try {
+    await showAlert('檢測錯誤中...', 'primary')
+
+    if (!errors.value.length) {
+      isDialogShown.value = true
+      return
+    } else {
+      await showAlert('檢測到錯誤，自動回報中...', 'danger')
+    }
+
+    await bugReport(errors.value.join('\n'))
   } finally {
-    dialogVisible.value = false
+    alertVisible.value = false
   }
+}
+async function handleClickDialogReport() {
+  await showAlert('回報中...', 'primary')
+  bugReport(reportDescription.value)
+  isDialogShown.value = false
 }
 </script>
 <template>
@@ -239,13 +251,29 @@ async function bugReport() {
       <span>資料來源：</span>
       <a class="text-primary underline" href="https://docs.google.com/spreadsheets/d/1hjvg6Rcy2aI90jT11yuI3MYD6DVow0CuJLuqtz4-IeU/edit" target="_blank">畢業薪資分享 (回覆)</a>
     </div>
-    <ABtn color="danger" icon-only icon="i-bx-error-circle" variant="text" ml="auto" @click="bugReport">
+    <ABtn color="danger" icon-only icon="i-bx-error-circle" variant="text" ml="auto" @click="bugCheck">
       <ATooltip text="Bug report" />
     </ABtn>
+    <ADialog
+      v-model="isDialogShown"
+      title="沒有檢測到問題，確定要回報嗎？"
+      class="w-[400px]"
+      persistent
+    >
+      <div class="a-card-body">
+        <div mb="4">
+          <ATextarea v-model="reportDescription" label="問題描述" placeholder="請簡述你遇到的問題與操作步驟" />
+        </div>
+        <div flex gap="x-2" justify="end">
+          <ABtn color="primary" variant="outline" text="sm" @click="isDialogShown = false">取消</ABtn>
+          <ABtn color="danger" text="sm" @click="handleClickDialogReport">回報</ABtn>
+        </div>
+      </div>
+    </ADialog>
   </footer>
   <div pos="fixed" right="2" top="2">
-    <AAlert v-show="dialogVisible" :color="dialogType">
-      {{  dialogMsg }}
+    <AAlert v-show="alertVisible" :color="alertType">
+      {{  alertMsg }}
     </AAlert>
   </div>
 </template>

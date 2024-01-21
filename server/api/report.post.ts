@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     auth: `token ${process.env.GITHUB_TOKEN}`,
   })
 
-  const errorsString = body.errors?.join('\n') ?? 'User reported a bug but no error was found.'
+  const errorsString = body.errors ? body.errors : 'User reported a bug but no error was found.'
   await octokit.rest.issues.create({
     owner: 'listennn08',
     repo: 'tech-fresh-salary',
